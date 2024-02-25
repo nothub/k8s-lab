@@ -84,7 +84,7 @@ resource "libvirt_domain" "work_node" {
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = ["10.42.0.10${count.index}"]
+    addresses  = ["10.42.0.2${count.index}"]
     mac        = "00:00:F3:10:42:2${count.index}"
   }
   disk {
