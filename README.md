@@ -4,3 +4,5 @@ My k8s laboratory, built on top of [Debian](https://www.debian.org/) and running
 
 Deployed with [OpenTofu](https://opentofu.org/) ([dmacvicar/libvirt](https://github.com/dmacvicar/terraform-provider-libvirt))
 and configured with [Ansible](https://github.com/ansible/ansible).
+
+TODO: import wip-stuff from https://github.com/nothub/k8s-lab-old
