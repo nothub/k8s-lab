@@ -40,10 +40,10 @@ resource "libvirt_network" "lab" {
   domain    = "k8s.local"
   addresses = ["10.42.0.0/24"]
   dhcp {
-    enabled = true
+    enabled = false
   }
   dns {
-    enabled = true
+    enabled = false
   }
 }
 
