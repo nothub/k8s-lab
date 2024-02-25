@@ -10,8 +10,10 @@ terraform {
 }
 
 locals {
-  ctrl_node_count = 2
-  work_node_count = 3
+  inventory_yaml = file("${path.module}/inventory.yaml")
+  inventory      = yamldecode(local.inventory_yaml)
+  ctrl_nodes     = local.inventory["ctrl"]["hosts"]
+  work_nodes     = local.inventory["work"]["hosts"]
 }
 
 provider "libvirt" {
@@ -48,44 +50,44 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 
 # persistent disks
 resource "libvirt_volume" "ctrl_disk" {
-  count          = local.ctrl_node_count
+  count          = length(local.ctrl_nodes)
   name           = "ctrl-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
-  size           = var.node_disk * 1024 * 1024 * 1024
+  size           = var.ctrl_node_disk * 1024 * 1024 * 1024
 }
 resource "libvirt_volume" "work_disk" {
-  count          = local.work_node_count
+  count          = length(local.work_nodes)
   name           = "work-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
-  size           = var.node_disk * 1024 * 1024 * 1024
+  size           = var.work_node_disk * 1024 * 1024 * 1024
 }
 
 # virtual machines
 resource "libvirt_domain" "ctrl_node" {
-  count     = local.ctrl_node_count
+  count     = length(local.ctrl_nodes)
   name      = "ctrl-${count.index}"
-  vcpu      = var.node_cores
-  memory    = var.node_memory
+  vcpu      = var.ctrl_node_cores
+  memory    = var.ctrl_node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = ["10.42.0.1${count.index}"]
-    mac        = "00:00:F3:10:42:1${count.index}"
+    addresses  = [local.ctrl_nodes["ctrl-${count.index}"]["ansible_host"]]
+    mac        = local.ctrl_nodes["ctrl-${count.index}"]["mac_addr"]
   }
   disk {
     volume_id = libvirt_volume.ctrl_disk[count.index].id
   }
 }
 resource "libvirt_domain" "work_node" {
-  count     = local.work_node_count
+  count     = length(local.work_nodes)
   name      = "work-${count.index}"
-  vcpu      = var.node_cores
-  memory    = var.node_memory
+  vcpu      = var.work_node_cores
+  memory    = var.work_node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = ["10.42.0.2${count.index}"]
-    mac        = "00:00:F3:10:42:2${count.index}"
+    addresses  = [local.work_nodes["work-${count.index}"]["ansible_host"]]
+    mac        = local.work_nodes["work-${count.index}"]["mac_addr"]
   }
   disk {
     volume_id = libvirt_volume.work_disk[count.index].id
