@@ -30,6 +30,36 @@ variable "node_count" {
   }
 }
 
+variable "node_cores" {
+  type        = number
+  default     = 2
+  description = "vcpu cores per node"
+  validation {
+    condition     = var.node_cores >= 1
+    error_message = "minimum vcpu cores: 1"
+  }
+}
+
+variable "node_memory" {
+  type        = number
+  default     = 4096
+  description = "memory per node (megabytes)"
+  validation {
+    condition     = var.node_memory >= 2048
+    error_message = "minimum node memory: 2048"
+  }
+}
+
+variable "node_disk" {
+  type        = number
+  default     = 20
+  description = "disk size per node (gigabytes)"
+  validation {
+    condition     = var.node_disk >= 10
+    error_message = "minimum node disk size: 10"
+  }
+}
+
 provider "libvirt" {
   uri = var.qemu_uri
 }
@@ -62,19 +92,19 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
   user_data = data.template_file.user_data.rendered
 }
 
-# persistent disk
+# persistent disks
 resource "libvirt_volume" "disk" {
   count          = var.node_count
   name           = "node-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
-  size           = 21474836480 # 20GB
+  size           = var.node_disk * 1024 * 1024 * 1024
 }
 
 resource "libvirt_domain" "node" {
   count     = var.node_count
   name      = "node-${count.index}"
-  vcpu      = 2
-  memory    = 4096
+  vcpu      = var.node_cores
+  memory    = var.node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
