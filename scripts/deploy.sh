@@ -13,11 +13,6 @@ tofu init \
 tofu validate \
   -no-color
 
-#tofu plan \
-#  -no-color
-
-TF_LOG=DEBUG \
-TF_LOG_PATH=./terraform.log \
 tofu apply \
   -no-color \
   -auto-approve \
