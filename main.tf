@@ -9,49 +9,9 @@ terraform {
   }
 }
 
-variable "qemu_uri" {
-  type    = string
-  default = "qemu:///system"
-}
-
-variable "ssh_key" {
-  type        = string
-  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwI2xmLrw4APecukfuLt+nrUNVFzzND/vENsQUTuyQP hub@desktop"
-  description = "janitor public ssh key"
-}
-
-variable "node_cores" {
-  type        = number
-  default     = 2
-  description = "vcpu cores per node"
-  validation {
-    condition     = var.node_cores >= 1
-    error_message = "minimum vcpu cores: 1"
-  }
-}
-
-variable "node_memory" {
-  type        = number
-  default     = 4096
-  description = "memory per node (megabytes)"
-  validation {
-    condition     = var.node_memory >= 2048
-    error_message = "minimum node memory: 2048"
-  }
-}
-
-variable "node_disk" {
-  type        = number
-  default     = 20
-  description = "disk size per node (gigabytes)"
-  validation {
-    condition     = var.node_disk >= 10
-    error_message = "minimum node disk size: 10"
-  }
-}
-
 locals {
-  node_count = 4
+  ctrl_node_count = 2
+  work_node_count = 3
 }
 
 provider "libvirt" {
@@ -87,25 +47,47 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 }
 
 # persistent disks
-resource "libvirt_volume" "disk" {
-  count          = local.node_count
-  name           = "node-${count.index}.qcow2"
+resource "libvirt_volume" "ctrl_disk" {
+  count          = local.ctrl_node_count
+  name           = "ctrl-${count.index}.qcow2"
+  base_volume_id = libvirt_volume.debian_12.id
+  size           = var.node_disk * 1024 * 1024 * 1024
+}
+resource "libvirt_volume" "work_disk" {
+  count          = local.work_node_count
+  name           = "work-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
   size           = var.node_disk * 1024 * 1024 * 1024
 }
 
-resource "libvirt_domain" "node" {
-  count     = local.node_count
-  name      = "node-${count.index}"
+# virtual machines
+resource "libvirt_domain" "ctrl_node" {
+  count     = local.ctrl_node_count
+  name      = "ctrl-${count.index}"
+  vcpu      = var.node_cores
+  memory    = var.node_memory
+  cloudinit = libvirt_cloudinit_disk.cloudinit.id
+  network_interface {
+    network_id = libvirt_network.lab.id
+    addresses  = ["10.42.0.1${count.index}"]
+    mac        = "00:00:F3:10:42:1${count.index}"
+  }
+  disk {
+    volume_id = libvirt_volume.ctrl_disk[count.index].id
+  }
+}
+resource "libvirt_domain" "work_node" {
+  count     = local.work_node_count
+  name      = "work-${count.index}"
   vcpu      = var.node_cores
   memory    = var.node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
     addresses  = ["10.42.0.10${count.index}"]
-    mac        = "00:00:F3:10:42:1${count.index}"
+    mac        = "00:00:F3:10:42:2${count.index}"
   }
   disk {
-    volume_id = libvirt_volume.disk[count.index].id
+    volume_id = libvirt_volume.work_disk[count.index].id
   }
 }
