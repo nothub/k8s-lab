@@ -9,13 +9,15 @@ terraform {
   }
 }
 
-provider "libvirt" {
-  uri = "qemu:///system"
+variable "qemu_uri" {
+  type    = string
+  default = "qemu:///system"
 }
 
 variable "ssh_key" {
   type    = string
   default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwI2xmLrw4APecukfuLt+nrUNVFzzND/vENsQUTuyQP hub@desktop"
+  description = "janitor public ssh key"
 }
 
 variable "node_count" {
@@ -26,6 +28,10 @@ variable "node_count" {
     condition     = var.node_count >= 2 && var.node_count <= 9
     error_message = "allowed node count: 2 to 9"
   }
+}
+
+provider "libvirt" {
+  uri = var.qemu_uri
 }
 
 resource "libvirt_network" "lab" {
