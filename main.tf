@@ -79,7 +79,7 @@ resource "libvirt_domain" "node" {
   network_interface {
     network_id = libvirt_network.lab.id
     addresses  = ["10.42.0.10${count.index}"]
-    mac        = "00:00:F3:10:10:1${count.index}"
+    mac        = "00:00:F3:10:42:1${count.index}"
   }
   disk {
     volume_id = libvirt_volume.disk[count.index].id
