@@ -18,6 +18,16 @@ variable "ssh_key" {
   default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwI2xmLrw4APecukfuLt+nrUNVFzzND/vENsQUTuyQP hub@desktop"
 }
 
+variable "node_count" {
+  type        = number
+  default     = 4
+  description = "total amount of cluster nodes"
+  validation {
+    condition     = var.node_count >= 2 && var.node_count <= 9
+    error_message = "allowed node count: 2 to 9"
+  }
+}
+
 resource "libvirt_network" "lab" {
   name      = "k8s"
   mode      = "nat"
@@ -47,22 +57,25 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 }
 
 # persistent disk
-resource "libvirt_volume" "lab" {
-  name           = "lab.qcow2"
+resource "libvirt_volume" "disk" {
+  count          = var.node_count
+  name           = "node-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
   size           = 21474836480 # 20GB
 }
 
-resource "libvirt_domain" "lab" {
-  name      = "lab"
+resource "libvirt_domain" "node" {
+  count     = var.node_count
+  name      = "node-${count.index}"
   vcpu      = 2
   memory    = 4096
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    mac        = "00:00:F3:10:10:10"
+    addresses  = ["10.42.0.10${count.index}"]
+    mac        = "00:00:F3:10:10:1${count.index}"
   }
   disk {
-    volume_id = libvirt_volume.lab.id
+    volume_id = libvirt_volume.disk[count.index].id
   }
 }
