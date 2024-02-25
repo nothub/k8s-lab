@@ -51,13 +51,13 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 # persistent disks
 resource "libvirt_volume" "ctrl_disk" {
   count          = length(local.ctrl_nodes)
-  name           = "ctrl-${count.index}.qcow2"
+  name           = "ctrl${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
   size           = var.ctrl_node_disk * 1024 * 1024 * 1024
 }
 resource "libvirt_volume" "work_disk" {
   count          = length(local.work_nodes)
-  name           = "work-${count.index}.qcow2"
+  name           = "work${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
   size           = var.work_node_disk * 1024 * 1024 * 1024
 }
@@ -65,14 +65,14 @@ resource "libvirt_volume" "work_disk" {
 # virtual machines
 resource "libvirt_domain" "ctrl_node" {
   count     = length(local.ctrl_nodes)
-  name      = "ctrl-${count.index}"
+  name      = "ctrl${count.index}"
   vcpu      = var.ctrl_node_cores
   memory    = var.ctrl_node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = [local.ctrl_nodes["ctrl-${count.index}"]["ansible_host"]]
-    mac        = local.ctrl_nodes["ctrl-${count.index}"]["mac_addr"]
+    addresses  = [local.ctrl_nodes["ctrl${count.index}"]["ansible_host"]]
+    mac        = local.ctrl_nodes["ctrl${count.index}"]["mac_addr"]
   }
   disk {
     volume_id = libvirt_volume.ctrl_disk[count.index].id
@@ -80,14 +80,14 @@ resource "libvirt_domain" "ctrl_node" {
 }
 resource "libvirt_domain" "work_node" {
   count     = length(local.work_nodes)
-  name      = "work-${count.index}"
+  name      = "work${count.index}"
   vcpu      = var.work_node_cores
   memory    = var.work_node_memory
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = [local.work_nodes["work-${count.index}"]["ansible_host"]]
-    mac        = local.work_nodes["work-${count.index}"]["mac_addr"]
+    addresses  = [local.work_nodes["work${count.index}"]["ansible_host"]]
+    mac        = local.work_nodes["work${count.index}"]["mac_addr"]
   }
   disk {
     volume_id = libvirt_volume.work_disk[count.index].id

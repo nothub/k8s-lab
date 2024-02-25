@@ -1,19 +1,19 @@
 ctrl:
   hosts:
-    ctrl-0:
+    ctrl0:
       ansible_host: '10.42.0.10'
       mac_addr: '00:00:F3:10:42:10'
-    ctrl-1:
+    ctrl1:
       ansible_host: '10.42.0.11'
       mac_addr: '00:00:F3:10:42:11'
 work:
   hosts:
-    work-0:
+    work0:
       ansible_host: '10.42.0.20'
       mac_addr: '00:00:F3:10:42:20'
-    work-1:
+    work1:
       ansible_host: '10.42.0.21'
       mac_addr: '00:00:F3:10:42:21'
-    work-2:
+    work2:
       ansible_host: '10.42.0.22'
       mac_addr: '00:00:F3:10:42:22'
