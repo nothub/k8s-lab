@@ -15,19 +15,9 @@ variable "qemu_uri" {
 }
 
 variable "ssh_key" {
-  type    = string
-  default = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwI2xmLrw4APecukfuLt+nrUNVFzzND/vENsQUTuyQP hub@desktop"
+  type        = string
+  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwI2xmLrw4APecukfuLt+nrUNVFzzND/vENsQUTuyQP hub@desktop"
   description = "janitor public ssh key"
-}
-
-variable "node_count" {
-  type        = number
-  default     = 4
-  description = "total amount of cluster nodes"
-  validation {
-    condition     = var.node_count >= 2 && var.node_count <= 9
-    error_message = "allowed node count: 2 to 9"
-  }
 }
 
 variable "node_cores" {
@@ -60,6 +50,10 @@ variable "node_disk" {
   }
 }
 
+locals {
+  node_count = 4
+}
+
 provider "libvirt" {
   uri = var.qemu_uri
 }
@@ -73,7 +67,7 @@ resource "libvirt_network" "lab" {
     enabled = false
   }
   dns {
-    enabled = false
+    enabled = true
   }
 }
 
@@ -94,14 +88,14 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 
 # persistent disks
 resource "libvirt_volume" "disk" {
-  count          = var.node_count
+  count          = local.node_count
   name           = "node-${count.index}.qcow2"
   base_volume_id = libvirt_volume.debian_12.id
   size           = var.node_disk * 1024 * 1024 * 1024
 }
 
 resource "libvirt_domain" "node" {
-  count     = var.node_count
+  count     = local.node_count
   name      = "node-${count.index}"
   vcpu      = var.node_cores
   memory    = var.node_memory
