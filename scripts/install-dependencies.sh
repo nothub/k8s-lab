@@ -10,6 +10,8 @@ if test "${distro_name}" != "Debian" || test "${distro_version}" != "12"; then
     exit 1
 fi
 
+apt-get update
+
 # install dependencies for installing dependencies
 apt-get install -y \
     apt-transport-https \
