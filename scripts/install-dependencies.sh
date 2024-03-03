@@ -1,6 +1,8 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-set -eu
+set -o errexit
+set -o nounset
+set -o pipefail
 
 # check distro
 distro_name="$(lsb_release --id --short 2>/dev/null)"
