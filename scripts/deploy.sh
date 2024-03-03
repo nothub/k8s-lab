@@ -4,30 +4,41 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+info() {
+    printf >&2 "\n\033[0;1m%s\033[0m\n" "${*}"
+}
+
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
-# purge old lab residue
+cat >&2 <<EOM
+
+██╗  ██╗ █████╗ ███████╗      ██╗      █████╗ ██████╗
+██║ ██╔╝██╔══██╗██╔════╝      ██║     ██╔══██╗██╔══██╗
+█████╔╝ ╚█████╔╝███████╗█████╗██║     ███████║██████╔╝
+██╔═██╗ ██╔══██╗╚════██║╚════╝██║     ██╔══██║██╔══██╗
+██║  ██╗╚█████╔╝███████║      ███████╗██║  ██║██████╔╝
+╚═╝  ╚═╝ ╚════╝ ╚══════╝      ╚══════╝╚═╝  ╚═╝╚═════╝
+EOM
+
+info 'Purging old infra leftovers...'
 ./scripts/destroy.sh
 
-# create machines
-{
-    tofu init \
-        -no-color
+info 'Initializing OpenTofu workdir...'
+tofu init -no-color
 
-    tofu validate \
-        -no-color
+info 'Linting OpenTofu configuration...'
+tofu validate -no-color
 
-    tofu apply \
-        -no-color \
-        -auto-approve \
-        -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
-}
+info 'Applying OpenTofu configuration...'
+tofu apply -no-color -auto-approve \
+    -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
 
 # await ssh status
 {
     addr="$(cat inventory.yaml | yq -r '.ctrl.hosts | to_entries | .[0].value.ansible_host')"
-    printf >&2 '\nPolling ssh status: '
+    printf '\n'
+    info 'Polling ssh status:'
     while ! ssh \
         -o BatchMode=yes \
         -o ConnectTimeout=1 \
@@ -43,6 +54,9 @@ cd "$(dirname "$(realpath "$0")")/.."
 
 # deploy machines
 {
+    info 'Linting Ansible playbook...'
     ansible-lint --parseable "playbook.yaml"
-    # TODO
+
+    info 'Running Ansible playbook...'
+    ansible-playbook --diff "playbook.yaml"
 }

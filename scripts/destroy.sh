@@ -5,8 +5,8 @@ set -eu
 # workdir is /
 cd "$(dirname "$(realpath "$0")")/.."
 
-set -x
-
+printf >&2 'Destroying old machines...\n'
+tofu init    -no-color                || true
 tofu destroy -no-color --auto-approve || true
 
 rm -f .terraform.lock.hcl
