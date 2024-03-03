@@ -7,11 +7,11 @@
     - k8s-common
 
 - name: 'K8s control-plane'
-  hosts: 'control_plane'
+  hosts: 'ctrl'
   roles:
     - k8s-control
 
 - name: 'K8s worker nodes'
-  hosts: 'workers'
+  hosts: 'work'
   roles:
     - k8s-worker
