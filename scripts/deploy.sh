@@ -12,11 +12,11 @@ create_machines() {
     tofu apply \
         -no-color \
         -auto-approve \
-        -var="ssh_key=$(cat ~/.ssh/id_ed25519.pub)"
+        -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
 }
 
 deploy_machines() {
-    ansible-lint --parseable "playbook.yaml"
+    : # TODO
 }
 
 await_ssh() {
