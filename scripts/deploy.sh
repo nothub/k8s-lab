@@ -27,7 +27,3 @@ while ! ssh \
     true; do
     sleep 1
 done
-
-# scan network
-sleep 1
-nmap -n -sn -oG - 10.42.0.0/24 | awk '/Up$/{print $2}' | tail -n +2
