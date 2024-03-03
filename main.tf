@@ -10,10 +10,10 @@ terraform {
 }
 
 locals {
-  inventory_yaml = file("${path.module}/inventory.yaml")
-  inventory      = yamldecode(local.inventory_yaml)
-  ctrl_nodes     = local.inventory["ctrl"]["hosts"]
-  work_nodes     = local.inventory["work"]["hosts"]
+  config_yaml = file("${path.module}/config.yaml")
+  config      = yamldecode(local.config_yaml)
+  ctrl_nodes     = local.config["hosts"]["ctrl"]
+  work_nodes     = local.config["hosts"]["work"]
 }
 
 provider "libvirt" {
@@ -71,8 +71,8 @@ resource "libvirt_domain" "ctrl_node" {
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = [local.ctrl_nodes["ctrl${count.index}"]["ansible_host"]]
-    mac        = local.ctrl_nodes["ctrl${count.index}"]["mac_addr"]
+    addresses  = [local.ctrl_nodes[count.index]["ipv4"]]
+    mac        = local.ctrl_nodes[count.index]["mac"]
   }
   disk {
     volume_id = libvirt_volume.ctrl_disk[count.index].id
@@ -86,8 +86,8 @@ resource "libvirt_domain" "work_node" {
   cloudinit = libvirt_cloudinit_disk.cloudinit.id
   network_interface {
     network_id = libvirt_network.lab.id
-    addresses  = [local.work_nodes["work${count.index}"]["ansible_host"]]
-    mac        = local.work_nodes["work${count.index}"]["mac_addr"]
+    addresses  = [local.work_nodes[count.index]["ipv4"]]
+    mac        = local.work_nodes[count.index]["mac"]
   }
   disk {
     volume_id = libvirt_volume.work_disk[count.index].id

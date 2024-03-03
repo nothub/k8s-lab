@@ -36,7 +36,7 @@ tofu apply -no-color -auto-approve \
 
 # await ssh status
 {
-    addr="$(cat inventory.yaml | yq -r '.ctrl.hosts | to_entries | .[0].value.ansible_host')"
+    addr="$(cat config.yaml | yq -r '.hosts.ctrl[0].ipv4')"
     printf '\n'
     info 'Polling ssh status:'
     while ! ssh \
@@ -62,3 +62,5 @@ tofu apply -no-color -auto-approve \
 
     # TODO
 }
+
+info '🏁 Done!'
