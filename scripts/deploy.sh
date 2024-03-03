@@ -23,7 +23,7 @@ while ! ssh \
     -o BatchMode=yes \
     -o ConnectTimeout=1 \
     -o StrictHostKeyChecking=no \
-    "root@10.42.0.10" \
+    "janitor@10.42.0.10" \
     true; do
     sleep 1
 done

@@ -1,11 +1,15 @@
 #cloud-config
 
 users:
-  - name: root
+  - name: janitor
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
     ssh_authorized_keys:
       - ${ssh_key}
 
-disable_root: false
+disable_root: true
 ssh_pwauth: false
 
 growpart:
