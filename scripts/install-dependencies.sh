@@ -5,8 +5,8 @@ set -o nounset
 set -o pipefail
 
 # check distro
-distro_name="$(lsb_release --id --short 2>/dev/null)"
-distro_version="$(lsb_release --release --short 2>/dev/null)"
+distro_name="$(lsb_release --id --short 2> /dev/null)"
+distro_version="$(lsb_release --release --short 2> /dev/null)"
 if test "${distro_name}" != "Debian" || test "${distro_version}" != "12"; then
     printf "Unsupported OS: %s %s\n" "${distro_name}" "${distro_version}"
     exit 1
@@ -41,11 +41,11 @@ apt-get install -y \
 
 # opentofu
 if test ! -f /usr/share/keyrings/opentofu.gpg; then
-    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey |
-        gpg --no-tty --batch --dearmor -o /usr/share/keyrings/opentofu.gpg
+    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey \
+        | gpg --no-tty --batch --dearmor -o /usr/share/keyrings/opentofu.gpg
 fi
-echo "deb [signed-by=/usr/share/keyrings/opentofu.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" |
-    tee /etc/apt/sources.list.d/opentofu.list
+echo "deb [signed-by=/usr/share/keyrings/opentofu.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main" \
+    | tee /etc/apt/sources.list.d/opentofu.list
 apt-get update
 apt-get install -y tofu
 

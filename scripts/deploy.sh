@@ -11,7 +11,7 @@ info() {
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
-cat >&2 <<EOM
+cat >&2 << EOM
 
 ██╗  ██╗ █████╗ ███████╗      ██╗      █████╗ ██████╗
 ██║ ██╔╝██╔══██╗██╔════╝      ██║     ██╔══██╗██╔══██╗
@@ -24,15 +24,18 @@ EOM
 info 'Purging old infra leftovers...'
 ./scripts/destroy.sh
 
-info 'Initializing OpenTofu workdir...'
-tofu init -no-color
+# create machines
+{
+    info 'Initializing OpenTofu workdir...'
+    tofu init -no-color
 
-info 'Linting OpenTofu configuration...'
-tofu validate -no-color
+    info 'Linting OpenTofu configuration...'
+    tofu validate -no-color
 
-info 'Applying OpenTofu configuration...'
-tofu apply -no-color -auto-approve \
-    -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
+    info 'Applying OpenTofu configuration...'
+    tofu apply -no-color -auto-approve \
+        -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
+}
 
 # await ssh status
 {
@@ -44,7 +47,7 @@ tofu apply -no-color -auto-approve \
         -o ConnectTimeout=1 \
         -o StrictHostKeyChecking=no \
         "janitor@${addr}" \
-        true 2>/dev/null; do
+        true 2> /dev/null; do
         sleep 1
         printf >&2 '😴 '
     done
@@ -52,7 +55,7 @@ tofu apply -no-color -auto-approve \
     printf >&2 '👌\n'
 }
 
-# deploy machines
+# deploy cluster
 {
     if test ! -d kubespray; then
         git clone --branch 'v2.24.1' --single-branch \
