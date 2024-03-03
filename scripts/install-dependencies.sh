@@ -22,10 +22,11 @@ apt-get install -y \
     gnupg
 install -m 0755 -d /usr/share/keyrings
 
-# ansible
+# python stuff
 apt-get install -y \
-    ansible \
-    ansible-lint
+    python3 \
+    python3-venv \
+    python3-wheel
 
 # virtual machine tools
 apt-get install -y \
