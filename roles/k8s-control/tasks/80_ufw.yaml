@@ -1,0 +1,36 @@
+---
+
+- name: 'Ufw allow K8s API server'
+  community.general.ufw:
+    rule: 'allow'
+    port: 6443
+    proto: 'tcp'
+  notify: reload_ufw
+
+- name: 'Ufw allow etcd server client API'
+  community.general.ufw:
+    rule: 'allow'
+    port: '2379:2380'
+    proto: 'tcp'
+  notify: reload_ufw
+
+- name: 'Ufw allow Kubelet API'
+  community.general.ufw:
+    rule: 'allow'
+    port: 10250
+    proto: 'tcp'
+  notify: reload_ufw
+
+- name: 'Ufw allow kube-scheduler'
+  community.general.ufw:
+    rule: 'allow'
+    port: 10259
+    proto: 'tcp'
+  notify: reload_ufw
+
+- name: 'Ufw allow kube-controller-manager'
+  community.general.ufw:
+    rule: 'allow'
+    port: 10257
+    proto: 'tcp'
+  notify: reload_ufw
