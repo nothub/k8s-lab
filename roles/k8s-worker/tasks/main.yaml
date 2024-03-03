@@ -3,9 +3,9 @@
 # https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/
 - name: 'Join worker node'
   ansible.builtin.shell: |
-    kubeadm join control.k8s.local:6443 \
+    kubeadm join ctrl0.k8s.local:6443 \
       --node-name {{ inventory_hostname }} \
-      --token {{ k8s.token }} \
+      --token {{ k8s.bootstrap_token }} \
       --discovery-token-unsafe-skip-ca-verification
     sleep 10
 
