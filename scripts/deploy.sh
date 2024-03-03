@@ -11,7 +11,7 @@ info() {
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
-cat >&2 << EOM
+cat >&2 <<EOM
 
 ██╗  ██╗ █████╗ ███████╗      ██╗      █████╗ ██████╗
 ██║ ██╔╝██╔══██╗██╔════╝      ██║     ██╔══██╗██╔══██╗
@@ -47,7 +47,7 @@ info 'Purging old infra leftovers...'
         -o ConnectTimeout=1 \
         -o StrictHostKeyChecking=no \
         "janitor@${addr}" \
-        true 2> /dev/null; do
+        true 2>/dev/null; do
         sleep 1
         printf >&2 '😴 '
     done
@@ -57,15 +57,14 @@ info 'Purging old infra leftovers...'
 
 # deploy cluster
 {
-    if test ! -d kubespray; then
-        info 'Fetching Kubespray...'
-        git clone --branch 'release-2.24' --single-branch \
-            https://github.com/kubernetes-sigs/kubespray.git
-        rm -rf kubespray/.git
-    fi
+    info 'Fetching Kubespray...'
+    workdir="$(mktemp -d /tmp/kubespray.XXXXXXXX)"
+    git clone --branch 'release-2.24' --single-branch \
+        https://github.com/kubernetes-sigs/kubespray.git \
+        "${workdir}"
 
     (
-        cd kubespray
+        cd "${workdir}"
 
         # install requirements in venv
         python3 -m venv venv
@@ -87,6 +86,8 @@ info 'Purging old infra leftovers...'
             --become \
             cluster.yml
     )
+
+    rm -rf "${workdir}"
 }
 
 info '🏁 Done!'
