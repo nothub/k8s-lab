@@ -35,7 +35,7 @@ apt-get install -y \
 # misc tools
 apt-get install -y \
     jq \
-    mkisofs
+    yq
 
 # opentofu
 if test ! -f /usr/share/keyrings/opentofu.gpg; then

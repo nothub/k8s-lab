@@ -2,28 +2,41 @@
 
 set -eu
 
-# workdir is /
+create_machines() {
+    tofu init \
+        -no-color
+
+    tofu validate \
+        -no-color
+
+    tofu apply \
+        -no-color \
+        -auto-approve \
+        -var="ssh_key=$(cat ~/.ssh/id_ed25519.pub)"
+}
+
+deploy_machines() {
+    ansible-lint --parseable "playbook.yaml"
+}
+
+await_ssh() {
+    host="$(cat inventory.yaml | yq -r '.ctrl.hosts.ctrl0.ansible_host')"
+    # wait for ssh
+    while ! ssh \
+        -o BatchMode=yes \
+        -o ConnectTimeout=1 \
+        -o StrictHostKeyChecking=no \
+        "janitor@${host}" \
+        true; do
+        sleep 1
+    done
+}
+
+# workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
 set -x
 
-tofu init \
-  -no-color
-
-tofu validate \
-  -no-color
-
-tofu apply \
-  -no-color \
-  -auto-approve \
-  -var="ssh_key=$(cat ~/.ssh/id_ed25519.pub)"
-
-# wait for ssh
-while ! ssh \
-    -o BatchMode=yes \
-    -o ConnectTimeout=1 \
-    -o StrictHostKeyChecking=no \
-    "janitor@10.42.0.10" \
-    true; do
-    sleep 1
-done
+create_machines
+deploy_machines
+await_ssh
