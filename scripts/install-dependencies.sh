@@ -46,3 +46,7 @@ echo "deb [signed-by=/usr/share/keyrings/opentofu.gpg] https://packages.opentofu
     tee /etc/apt/sources.list.d/opentofu.list
 apt-get update
 apt-get install -y tofu
+
+# dmacvicar/libvirt (cloudinit)
+apt-get install -y \
+    mkisofs
