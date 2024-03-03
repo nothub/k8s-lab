@@ -1,5 +1,0 @@
----
-
-dependencies:
-  - role: 'base'
-  - role: 'k8s-common'

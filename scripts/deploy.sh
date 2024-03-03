@@ -54,9 +54,11 @@ tofu apply -no-color -auto-approve \
 
 # deploy machines
 {
-    info 'Linting Ansible playbook...'
-    #ansible-lint --parseable "playbook.yaml"
+    if test ! -d kubespray; then
+        git clone --branch 'v2.24.1' --single-branch \
+            https://github.com/kubernetes-sigs/kubespray.git
+        rm -rf kubespray/.git
+    fi
 
-    info 'Running Ansible playbook...'
-    ansible-playbook --diff "playbook.yaml"
+    # TODO
 }
