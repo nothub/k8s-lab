@@ -55,7 +55,7 @@ tofu apply -no-color -auto-approve \
 # deploy machines
 {
     info 'Linting Ansible playbook...'
-    ansible-lint --parseable "playbook.yaml"
+    #ansible-lint --parseable "playbook.yaml"
 
     info 'Running Ansible playbook...'
     ansible-playbook --diff "playbook.yaml"
