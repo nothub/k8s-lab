@@ -16,7 +16,7 @@ create_machines() {
 }
 
 deploy_machines() {
-    : # TODO
+    ansible-lint --parseable "playbook.yaml"
 }
 
 await_ssh() {
