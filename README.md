@@ -1,4 +1,8 @@
-## 🧪 k8s-lab
+## 🧪 infra-lab
 
-My k8s laboratory, deployed with 🥘 [OpenTofu](https://opentofu.org/) ([dmacvicar/libvirt](https://github.com/dmacvicar/terraform-provider-libvirt))
-and 🌊 [Kubespray](https://kubespray.io), running in 🖥️ [QEMU](https://www.qemu.org/).
+My infra laboratory,
+powered by 🏗️ [K3s](https://k3s.io/),
+deployed with 🥘 [OpenTofu](https://opentofu.org/),
+running in 🖥️ [QEMU](https://www.qemu.org/).
+
+---

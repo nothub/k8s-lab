@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-info() {
+print_bold() {
     printf >&2 "\n\033[0;1m%s\033[0m\n" "${*}"
 }
 
@@ -21,73 +21,51 @@ cat >&2 <<EOM
 ╚═╝  ╚═╝ ╚════╝ ╚══════╝      ╚══════╝╚═╝  ╚═╝╚═════╝
 EOM
 
-info 'Purging old infra leftovers...'
+print_bold 'Purging old infra leftovers...'
 ./scripts/destroy.sh
 
 # create machines
 {
-    info 'Initializing OpenTofu workdir...'
+    print_bold 'Initializing OpenTofu workdir...'
     tofu init -no-color
 
-    info 'Linting OpenTofu configuration...'
+    print_bold 'Linting OpenTofu configuration...'
     tofu validate -no-color
 
-    info 'Applying OpenTofu configuration...'
+    print_bold 'Applying OpenTofu configuration...'
     tofu apply -no-color -auto-approve \
         -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
 }
 
-# await ssh status
-{
-    addr="$(cat config.yaml | yq -r '.hosts.ctrl[0].ipv4')"
-    printf '\n'
-    info 'Polling ssh status:'
-    while ! ssh \
-        -o BatchMode=yes \
-        -o ConnectTimeout=1 \
-        -o StrictHostKeyChecking=no \
-        "janitor@${addr}" \
-        true 2>/dev/null; do
-        sleep 1
-        printf >&2 '😴 '
-    done
-    sleep 1
-    printf >&2 '👌\n'
-}
-
 # deploy cluster
 {
-    info 'Fetching Kubespray...'
-    workdir="$(mktemp -d /tmp/kubespray.XXXXXXXX)"
-    git clone --branch 'release-2.24' --single-branch \
-        https://github.com/kubernetes-sigs/kubespray.git \
-        "${workdir}"
 
-    (
-        cd "${workdir}"
+    mapfile -t ctrl_ips < <(yq -r '.hosts.ctrl[].ipv4' config.yaml)
+    mapfile -t work_ips < <(yq -r '.hosts.work[].ipv4' config.yaml)
 
-        # install requirements in venv
-        python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+    for ip in "${ctrl_ips[@]}" "${work_ips[@]}"; do
+        ssh-keygen \
+            -f "${HOME}/.ssh/known_hosts" \
+            -R "${ip}" 2>/dev/null
+        if ! ssh -o BatchMode=yes \
+            -o ConnectTimeout=300 \
+            -o StrictHostKeyChecking=no \
+            "janitor@${ip}" \
+            true 2>/dev/null; then
+            print_bold "No ssh connection to: ${ip}"
+            exit 1
+        fi
+        sleep 0.1
+    done
 
-        # generate inventory
-        cp -rfp inventory/sample inventory/mycluster
-        # shellcheck disable=SC2046
-        CONFIG_FILE=inventory/mycluster/hosts.yml \
-            python3 contrib/inventory_builder/inventory.py \
-            $(yq -r '.hosts | to_entries | .[].value[].ipv4' config.yaml)
+    for ip in "${ctrl_ips[@]}"; do
+        echo "ctrl host: ${ip}"
+    done
 
-        info 'Deploying cluster...'
-        ansible-playbook \
-            --inventory-file inventory/mycluster/hosts.yml \
-            -u 'janitor' \
-            --verbose \
-            --become \
-            cluster.yml
-    )
+    for ip in "${work_ips[@]}"; do
+        echo "work host: ${ip}"
+    done
 
-    rm -rf "${workdir}"
 }
 
-info '🏁 Done!'
+print_bold '🏁 Done!'
