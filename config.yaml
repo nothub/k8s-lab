@@ -1,5 +1,9 @@
 ---
 
+net:
+  domain: 'k8s.local'
+  cidr: '10.42.0.0/24'
+
 hosts:
   ctrl:
     - ipv4: '10.42.0.10'

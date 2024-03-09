@@ -12,8 +12,9 @@ terraform {
 locals {
   config_yaml = file("${path.module}/config.yaml")
   config      = yamldecode(local.config_yaml)
-  ctrl_nodes     = local.config["hosts"]["ctrl"]
-  work_nodes     = local.config["hosts"]["work"]
+  ctrl_nodes  = local.config["hosts"]["ctrl"]
+  work_nodes  = local.config["hosts"]["work"]
+  net         = local.config["net"]
 }
 
 provider "libvirt" {
@@ -23,8 +24,8 @@ provider "libvirt" {
 resource "libvirt_network" "lab" {
   name      = "k8s"
   mode      = "nat"
-  domain    = "k8s.local"
-  addresses = ["10.42.0.0/24"]
+  domain    = local.net["domain"]
+  addresses = [local.net["cidr"]]
   dhcp {
     enabled = false
   }
