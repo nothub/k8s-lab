@@ -17,9 +17,9 @@ clear_known_host() {
 await_ssh() {
     local tries="0"
     while ! ssh \
-        -o BatchMode=yes \
-        -o ConnectTimeout=1 \
-        -o StrictHostKeyChecking=no \
+        -o 'BatchMode=yes' \
+        -o 'ConnectTimeout=1' \
+        -o 'StrictHostKeyChecking=no' \
         "janitor@${1}" true &>/dev/null; do
         if test "${tries}" = "2"; then
             print_bold "Waiting for ssh on: ${ip}"
@@ -32,6 +32,13 @@ await_ssh() {
         sleep 1
     done
     sleep 0.1
+}
+
+ssh_cmd() {
+    ssh "janitor@${1}" -p 22 \
+        -o 'BatchMode=yes' \
+        -o 'ConnectTimeout=1' \
+        -- "${@}"
 }
 
 # workdir is repository root
@@ -66,10 +73,12 @@ print_bold 'Purging old infra leftovers...'
 
     for ip in "${ctrl_ips[@]}"; do
         echo "ctrl host: ${ip}"
+        ssh_cmd "curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token') sh -"
     done
 
     for ip in "${work_ips[@]}"; do
         echo "work host: ${ip}"
+        ssh_cmd "curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token') sh -"
     done
 
 }
