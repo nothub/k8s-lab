@@ -8,6 +8,32 @@ print_bold() {
     printf >&2 "\n\033[0;1m%s\033[0m\n" "${*}"
 }
 
+clear_known_host() {
+    ssh-keygen \
+        -f "${HOME}/.ssh/known_hosts" \
+        -R "${1}" || true
+}
+
+await_ssh() {
+    local tries="0"
+    while ! ssh \
+        -o BatchMode=yes \
+        -o ConnectTimeout=1 \
+        -o StrictHostKeyChecking=no \
+        "janitor@${1}" true 2>/dev/null; do
+        if test "${tries}" = "1"; then
+            print_bold "Waiting for ssh on: ${ip}"
+        fi
+        if test "${tries}" -ge "60"; then
+            print_bold "No ssh connection to: ${ip}"
+            exit 1
+        fi
+        ((tries++))
+        sleep 1
+    done
+    sleep 0.1
+}
+
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
@@ -44,18 +70,8 @@ print_bold 'Purging old infra leftovers...'
     mapfile -t work_ips < <(yq -r '.hosts.work[].ipv4' config.yaml)
 
     for ip in "${ctrl_ips[@]}" "${work_ips[@]}"; do
-        ssh-keygen \
-            -f "${HOME}/.ssh/known_hosts" \
-            -R "${ip}" 2>/dev/null
-        if ! ssh -o BatchMode=yes \
-            -o ConnectTimeout=300 \
-            -o StrictHostKeyChecking=no \
-            "janitor@${ip}" \
-            true 2>/dev/null; then
-            print_bold "No ssh connection to: ${ip}"
-            exit 1
-        fi
-        sleep 0.1
+        clear_known_host "${ip}"
+        await_ssh "${ip}"
     done
 
     for ip in "${ctrl_ips[@]}"; do
