@@ -16,22 +16,29 @@ clear_known_host() {
 
 await_ssh() {
     local tries="0"
+
     while ! ssh \
         -o 'BatchMode=yes' \
         -o 'ConnectTimeout=1' \
         -o 'VisualHostKey=no' \
         -o 'StrictHostKeyChecking=no' \
         "janitor@${1}" true &> /dev/null; do
+
         if test "${tries}" = "2"; then
             print_bold "Waiting for ssh on: ${ip}"
         fi
+
         if test "${tries}" -ge "60"; then
             print_bold "Connection timeout to: ${ip}"
             exit 1
         fi
+
         ((tries += 1))
+
         sleep 1
+
     done
+
     sleep 0.1
 }
 
@@ -56,7 +63,6 @@ print_bold 'Purging old infra leftovers...'
 
 # deploy cluster
 {
-
     mapfile -t ctrl_ips < <(yq -r '.hosts.ctrl[].ipv4' config.yaml)
     mapfile -t work_ips < <(yq -r '.hosts.work[].ipv4' config.yaml)
 
@@ -71,21 +77,29 @@ print_bold 'Purging old infra leftovers...'
     for ip in "${ctrl_ips[@]}"; do
         if test "${ip}" = "${ctrl_ips[0]}"; then
             print_bold "Initializing cluster, starting with: ${ip}"
-            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
-                -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init"
+            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+                "janitor@${ip}" -- \
+                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init"
         else
             print_bold "Joining server node: ${ip}"
-            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
-                -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - server"
+            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+                "janitor@${ip}" -- \
+                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - server"
         fi
     done
 
     for ip in "${work_ips[@]}"; do
         print_bold "Joining agent node: ${ip}"
-        ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
-            -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - agent"
+        ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+            "janitor@${ip}" -- \
+            "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - agent"
     done
 
+    print_bold "Cluster is starting..."
+    sleep 10
+    ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+        "janitor@${ctrl_ips[0]}" -- \
+        "sudo kubectl get pod -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName --all-namespaces"
 }
 
 print_bold '🏁 Done!'
