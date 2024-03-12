@@ -11,7 +11,7 @@ print_bold() {
 clear_known_host() {
     ssh-keygen \
         -f "${HOME}/.ssh/known_hosts" \
-        -R "${1}" || true
+        -R "${1}" &>/dev/null || true
 }
 
 await_ssh() {
@@ -20,8 +20,8 @@ await_ssh() {
         -o BatchMode=yes \
         -o ConnectTimeout=1 \
         -o StrictHostKeyChecking=no \
-        "janitor@${1}" true 2>/dev/null; do
-        if test "${tries}" = "1"; then
+        "janitor@${1}" true &>/dev/null; do
+        if test "${tries}" = "2"; then
             print_bold "Waiting for ssh on: ${ip}"
         fi
         if test "${tries}" -ge "60"; then
