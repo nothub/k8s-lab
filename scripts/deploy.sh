@@ -25,10 +25,10 @@ await_ssh() {
             print_bold "Waiting for ssh on: ${ip}"
         fi
         if test "${tries}" -ge "60"; then
-            print_bold "No ssh connection to: ${ip}"
+            print_bold "Connection timeout to: ${ip}"
             exit 1
         fi
-        ((tries++))
+        ((tries+=1))
         sleep 1
     done
     sleep 0.1
