@@ -11,7 +11,7 @@ print_bold() {
 clear_known_host() {
     ssh-keygen \
         -f "${HOME}/.ssh/known_hosts" \
-        -R "${1}" &>/dev/null || true
+        -R "${1}" &> /dev/null || true
 }
 
 await_ssh() {
@@ -19,8 +19,9 @@ await_ssh() {
     while ! ssh \
         -o 'BatchMode=yes' \
         -o 'ConnectTimeout=1' \
+        -o 'VisualHostKey=no' \
         -o 'StrictHostKeyChecking=no' \
-        "janitor@${1}" true &>/dev/null; do
+        "janitor@${1}" true &> /dev/null; do
         if test "${tries}" = "2"; then
             print_bold "Waiting for ssh on: ${ip}"
         fi
@@ -28,17 +29,10 @@ await_ssh() {
             print_bold "Connection timeout to: ${ip}"
             exit 1
         fi
-        ((tries+=1))
+        ((tries += 1))
         sleep 1
     done
     sleep 0.1
-}
-
-ssh_cmd() {
-    ssh "janitor@${1}" -p 22 \
-        -o 'BatchMode=yes' \
-        -o 'ConnectTimeout=1' \
-        -- "${@}"
 }
 
 # workdir is repository root
@@ -71,14 +65,25 @@ print_bold 'Purging old infra leftovers...'
         await_ssh "${ip}"
     done
 
+    k3s_url="https://${ctrl_ips[0]}:6443"
+    k3s_token="$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token')"
+
     for ip in "${ctrl_ips[@]}"; do
-        echo "ctrl host: ${ip}"
-        ssh_cmd "curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token') sh -"
+        if test "${ip}" = "${ctrl_ips[0]}"; then
+            print_bold "Initializing cluster, starting with: ${ip}"
+            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
+                -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init"
+        else
+            print_bold "Joining server node: ${ip}"
+            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
+                -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - server"
+        fi
     done
 
     for ip in "${work_ips[@]}"; do
-        echo "work host: ${ip}"
-        ssh_cmd "curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token') sh -"
+        print_bold "Joining agent node: ${ip}"
+        ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' "janitor@${ip}" -p 22 \
+            -- "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - agent"
     done
 
 }
