@@ -95,11 +95,10 @@ print_bold 'Purging old infra leftovers...'
             "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - agent"
     done
 
-    print_bold "Cluster is starting..."
-    sleep 10
+    print_bold "Cluster is ready..."
     ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
         "janitor@${ctrl_ips[0]}" -- \
-        "sudo kubectl get pod -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName --all-namespaces"
+        "sudo kubectl get nodes"
 }
 
 print_bold '🏁 Done!'
