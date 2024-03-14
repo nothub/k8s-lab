@@ -13,5 +13,3 @@ rm -f .terraform.lock.hcl
 rm -f .terraform.tfstate.lock.info
 rm -f  terraform.tfstate
 rm -f  terraform.tfstate.backup
-
-rm -rf kubespray/inventory/mycluster
