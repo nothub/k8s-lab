@@ -42,7 +42,9 @@ resource "libvirt_volume" "debian_12" {
 
 # cloudinit disk
 data "template_file" "user_data" {
-  template = templatefile("${path.module}/cloudinit.tftpl", { ssh_key = var.ssh_key })
+  template = templatefile("${path.module}/cloudinit.tftpl", {
+    pub_keys = yamldecode(file("${path.module}/secrets/ssh.yaml")).pub_keys
+  })
 }
 resource "libvirt_cloudinit_disk" "cloudinit" {
   name      = "cloudinit.iso"

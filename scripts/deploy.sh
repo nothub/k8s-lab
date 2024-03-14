@@ -57,8 +57,7 @@ print_bold 'Purging old infra leftovers...'
     tofu validate -no-color
 
     print_bold 'Applying OpenTofu configuration...'
-    tofu apply -no-color -auto-approve \
-        -var="ssh_key=$(cat 'secrets/ssh.yaml' | yq -r '.pub_keys[0]')"
+    tofu apply -no-color -auto-approve
 }
 
 # deploy cluster

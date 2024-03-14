@@ -7,7 +7,9 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     lock_passwd: true
     ssh_authorized_keys:
-      - ${ssh_key}
+    %{ for pub_key in pub_keys ~}
+      - ${ pub_key }
+    %{ endfor ~}
 
 disable_root: true
 ssh_pwauth: false
