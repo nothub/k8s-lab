@@ -1,5 +1,3 @@
 /.terraform/
 /.terraform.*
 /terraform.*
-
-/ansible.log

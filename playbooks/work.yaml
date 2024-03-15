@@ -2,8 +2,6 @@
 
 - name: 'Worker Node'
   hosts: 'all'
-  remote_user: janitor
-  become: true
 
   roles:
     - debian-base

@@ -69,15 +69,19 @@ tofu apply -no-color -auto-approve
         await_ssh "${ip}"
     done
 
-    print_bold "Executing control node playbook..."
-    ansible-playbook --diff \
-        --inventory "$(IFS=, eval 'printf "%s" "${ctrl_ips[*]}"')" \
-        "playbook-ctrl.yaml"
+    {
+        cd playbooks
 
-    print_bold "Executing worker node playbook..."
-    ansible-playbook --diff \
-        --inventory "$(IFS=, eval 'printf "%s" "${work_ips[*]}"')" \
-        "playbook-work.yaml"
+        print_bold "Executing control node playbook..."
+        ansible-playbook --diff \
+            --inventory "$(IFS=, eval 'printf "%s" "${ctrl_ips[*]}"')" \
+            "ctrl.yaml"
+
+        print_bold "Executing worker node playbook..."
+        ansible-playbook --diff \
+            --inventory "$(IFS=, eval 'printf "%s" "${work_ips[*]}"')" \
+            "work.yaml"
+    }
 
     k3s_url="https://${ctrl_ips[0]}:6443"
     k3s_token="$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token')"
