@@ -1,0 +1,8 @@
+---
+
+- name: 'Copy issue'
+  ansible.builtin.copy:
+    src: 'issue'
+    dest: '/etc/issue'
+    mode: '0644'
+    force: true

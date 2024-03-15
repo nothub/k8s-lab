@@ -1,0 +1,12 @@
+---
+
+- name: 'Install locales'
+  ansible.builtin.apt:
+    state: 'present'
+    pkg:
+      - 'locales'
+
+- name: 'Set locales'
+  community.general.locale_gen:
+    name: 'en_US.UTF-8'
+    state: 'present'

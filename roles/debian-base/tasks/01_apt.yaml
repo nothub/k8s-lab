@@ -1,0 +1,16 @@
+---
+
+- name: 'Apt force ipv4'
+  ansible.builtin.copy:
+    src: 'apt-force-ipv4'
+    dest: '/etc/apt/apt.conf.d/99force-ipv4'
+    mode: '0644'
+    force: true
+
+- name: 'Update apt cache'
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: 'Apt dist upgrade'
+  ansible.builtin.apt:
+    upgrade: 'dist'

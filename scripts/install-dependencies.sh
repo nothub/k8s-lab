@@ -53,3 +53,8 @@ apt-get install -y tofu
 # dmacvicar/libvirt (cloudinit)
 apt-get install -y \
     mkisofs
+
+# ansible stuff
+apt-get install -y \
+    ansible \
+    ansible-lint

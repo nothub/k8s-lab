@@ -1,0 +1,9 @@
+---
+
+- ansible.builtin.import_tasks: '00_first.yaml'
+- ansible.builtin.import_tasks: '01_apt.yaml'
+- ansible.builtin.import_tasks: '02_time.yaml'
+- ansible.builtin.import_tasks: '03_locales.yaml'
+- ansible.builtin.import_tasks: '11_ufw.yaml'
+- ansible.builtin.import_tasks: '71_motd.yaml'
+- ansible.builtin.import_tasks: '72_issue.yaml'
