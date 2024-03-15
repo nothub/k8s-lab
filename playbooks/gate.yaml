@@ -1,0 +1,8 @@
+---
+
+- name: 'Gate Node'
+  hosts: 'all'
+
+  roles:
+    - debian-base
+    - gate

@@ -60,16 +60,23 @@ print_bold 'Purging old infra leftovers...'
 
 # deploy cluster
 {
+    gate_ip="$(yq -r '.hosts.gate.ipv4' config.yaml)"
     mapfile -t ctrl_ips < <(yq -r '.hosts.ctrl[].ipv4' config.yaml)
     mapfile -t work_ips < <(yq -r '.hosts.work[].ipv4' config.yaml)
 
-    for ip in "${ctrl_ips[@]}" "${work_ips[@]}"; do
+    for ip in "${gate_ip}" "${ctrl_ips[@]}" "${work_ips[@]}"; do
         clear_known_host "${ip}"
         await_ssh "${ip}"
     done
 
     (
         cd playbooks
+
+        print_bold "Executing gate node playbook..."
+        ansible-playbook --diff \
+            --inventory "${gate_ip}," \
+            --extra-vars="{\"ctrl_ips\": [$(IFS=, eval 'printf "%s" "${ctrl_ips[*]}"')]}" \
+            "gate.yaml"
 
         print_bold "Executing control node playbook..."
         ansible-playbook --diff \
@@ -82,15 +89,17 @@ print_bold 'Purging old infra leftovers...'
             "work.yaml"
     )
 
-    k3s_url="https://${ctrl_ips[0]}:6443"
-    k3s_token="$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token')"
+    k3s_url="https://${gate_ip}:6443"
+    k3s_token="$(cat 'secrets/k3s.yaml' | yq -r '.bootstrap_token')"
+
+    print_bold "Initializing cluster, starting with: ${ctrl_ips[0]}"
+    ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+        "janitor@${ctrl_ips[0]}" -- \
+        "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init --write-kubeconfig-mode=644"
 
     for ip in "${ctrl_ips[@]}"; do
         if test "${ip}" = "${ctrl_ips[0]}"; then
-            print_bold "Initializing cluster, starting with: ${ip}"
-            ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
-                "janitor@${ip}" -- \
-                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init --write-kubeconfig-mode=644"
+            continue
         else
             print_bold "Joining server node: ${ip}"
             ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \

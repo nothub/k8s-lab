@@ -12,6 +12,7 @@ terraform {
 locals {
   config_yaml = file("${path.module}/../config.yaml")
   config      = yamldecode(local.config_yaml)
+  gate_node   = local.config["hosts"]["gate"]
   ctrl_nodes  = local.config["hosts"]["ctrl"]
   work_nodes  = local.config["hosts"]["work"]
   net         = local.config["net"]
@@ -52,6 +53,11 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
 }
 
 # persistent disks
+resource "libvirt_volume" "gate_disk" {
+  name           = "gate.qcow2"
+  base_volume_id = libvirt_volume.debian_12.id
+  size           = var.ctrl_node_disk * 1024 * 1024 * 1024
+}
 resource "libvirt_volume" "ctrl_disk" {
   count          = length(local.ctrl_nodes)
   name           = "ctrl${count.index}.qcow2"
@@ -66,6 +72,20 @@ resource "libvirt_volume" "work_disk" {
 }
 
 # virtual machines
+resource "libvirt_domain" "gate_node" {
+  name      = "gate"
+  vcpu      = var.gate_node_cores
+  memory    = var.gate_node_memory
+  cloudinit = libvirt_cloudinit_disk.cloudinit.id
+  network_interface {
+    network_id = libvirt_network.lab.id
+    addresses  = [local.gate_node["ipv4"]]
+    mac        = local.gate_node["mac"]
+  }
+  disk {
+    volume_id = libvirt_volume.gate_disk.id
+  }
+}
 resource "libvirt_domain" "ctrl_node" {
   count     = length(local.ctrl_nodes)
   name      = "ctrl${count.index}"
