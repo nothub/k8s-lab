@@ -90,7 +90,7 @@ print_bold 'Purging old infra leftovers...'
             print_bold "Initializing cluster, starting with: ${ip}"
             ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
                 "janitor@${ip}" -- \
-                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init"
+                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init --write-kubeconfig-mode=644"
         else
             print_bold "Joining server node: ${ip}"
             ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
@@ -106,10 +106,19 @@ print_bold 'Purging old infra leftovers...'
             "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - agent"
     done
 
-    print_bold "Cluster is ready..."
+    print_bold "Preparing kubeconfig file..."
+    scp -o 'BatchMode=yes' -o 'VisualHostKey=no' \
+    "janitor@${ctrl_ips[0]}:/etc/rancher/k3s/k3s.yaml" .
     ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
-        "janitor@${ctrl_ips[0]}" -- \
-        "sudo kubectl get nodes"
+            "janitor@${ctrl_ips[0]}" -- \
+            "sudo chmod 600 /etc/rancher/k3s/k3s.yaml"
+
+    # TODO: this is kinda hacky, start using dns+lb and stop doing this...
+    sed -i "s#127.0.0.1#${ctrl_ips[0]}#" 'k3s.yaml'
+
+    print_bold "Testing cluster connection..."
+    kubectl --kubeconfig 'k3s.yaml' get nodes
+    kubectl --kubeconfig 'k3s.yaml' get pods --all-namespaces
 }
 
 print_bold '🏁 Done!'
