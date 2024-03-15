@@ -45,11 +45,11 @@ await_ssh() {
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
+print_bold 'Purging old infra leftovers...'
+./scripts/destroy.sh
+
 (
     cd infra
-
-    print_bold 'Purging old infra leftovers...'
-    ./scripts/destroy.sh # (destroy.sh also does the tofu init)
 
     print_bold 'Initializing OpenTofu workdir...'
     tofu init -no-color
