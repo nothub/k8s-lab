@@ -32,8 +32,8 @@ apt-get install -y \
 apt-get install -y \
     qemu-system-x86 \
     qemu-utils \
-    libvirt-daemon-system \
-    virt-manager
+    libvirt-daemon \
+    libvirt-daemon-system
 
 # misc tools
 apt-get install -y \
