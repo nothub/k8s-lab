@@ -4,7 +4,7 @@ My IaC laboratory
 
 ---
 
-#### 🛍️ Tooling
+#### 🧰 Toolbox
 
 - 🎡 [K8s](https://kubernetes.io/) ([K3s](https://k3s.io/))
 - 👷 [OpenTofu](https://opentofu.org/) ([dmacvicar/libvirt](https://github.com/dmacvicar/terraform-provider-libvirt))
@@ -15,6 +15,6 @@ My IaC laboratory
 #### 🏗️ Deploy
 
 ```sh
-sudo ./scripts/install-dependencies.sh
+sudo ./scripts/install-deps.sh
 ./scripts/deploy.sh
 ```
