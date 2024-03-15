@@ -45,19 +45,18 @@ await_ssh() {
 # workdir is repository root
 cd "$(dirname "$(realpath "$0")")/.."
 
-print_bold 'Purging old infra leftovers...'
-./scripts/destroy.sh # (destroy.sh also does the tofu init)
+(
+    cd infra
 
-print_bold 'Initializing OpenTofu workdir...'
-tofu init -no-color
+    print_bold 'Purging old infra leftovers...'
+    ./scripts/destroy.sh # (destroy.sh also does the tofu init)
 
-print_bold 'Linting stuff...'
-tofu validate -no-color
-#ansible-lint --parseable 'playbook-ctrl.yaml'
-#ansible-lint --parseable 'playbook-work.yaml'
+    print_bold 'Initializing OpenTofu workdir...'
+    tofu init -no-color
 
-print_bold 'Creating machines...'
-tofu apply -no-color -auto-approve
+    print_bold 'Creating machines...'
+    tofu apply -no-color -auto-approve
+)
 
 # deploy cluster
 {
@@ -69,7 +68,7 @@ tofu apply -no-color -auto-approve
         await_ssh "${ip}"
     done
 
-    {
+    (
         cd playbooks
 
         print_bold "Executing control node playbook..."
@@ -81,7 +80,7 @@ tofu apply -no-color -auto-approve
         ansible-playbook --diff \
             --inventory "$(IFS=, eval 'printf "%s" "${work_ips[*]}"')" \
             "work.yaml"
-    }
+    )
 
     k3s_url="https://${ctrl_ips[0]}:6443"
     k3s_token="$(cat 'secrets/k8s.yaml' | yq -r '.bootstrap_token')"

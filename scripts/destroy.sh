@@ -2,8 +2,8 @@
 
 set -eu
 
-# workdir is /
-cd "$(dirname "$(realpath "$0")")/.."
+# workdir is /infra
+cd "$(dirname "$(realpath "$0")")/../infra"
 
 printf >&2 'Destroying old machines...\n'
 tofu init    -no-color                || true

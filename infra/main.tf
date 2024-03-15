@@ -10,7 +10,7 @@ terraform {
 }
 
 locals {
-  config_yaml = file("${path.module}/config.yaml")
+  config_yaml = file("${path.module}/../config.yaml")
   config      = yamldecode(local.config_yaml)
   ctrl_nodes  = local.config["hosts"]["ctrl"]
   work_nodes  = local.config["hosts"]["work"]
@@ -43,7 +43,7 @@ resource "libvirt_volume" "debian_12" {
 # cloudinit disk
 data "template_file" "user_data" {
   template = templatefile("${path.module}/cloudinit.tftpl", {
-    pub_keys = yamldecode(file("${path.module}/secrets/ssh.yaml")).pub_keys
+    pub_keys = yamldecode(file("${path.module}/../secrets/ssh.yaml")).pub_keys
   })
 }
 resource "libvirt_cloudinit_disk" "cloudinit" {
