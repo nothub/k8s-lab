@@ -3,3 +3,6 @@
 - name: 'Print control nodes'
   ansible.builtin.debug:
     msg: 'Control Nodes: {{ ctrl_ips }}'
+
+- ansible.builtin.import_tasks: '10_haproxy.yaml'
+- ansible.builtin.import_tasks: '90_ufw.yaml'

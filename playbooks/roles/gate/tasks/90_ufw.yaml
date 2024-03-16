@@ -30,56 +30,21 @@
     proto: 'tcp'
   notify: reload_ufw
 
-- name: 'Ufw allow etcd'
+- name: 'Ufw allow HTTP'
   community.general.ufw:
     rule: 'allow'
-    port: 2379:2380
+    port: 80
+    proto: 'tcp'
+  notify: reload_ufw
+
+- name: 'Ufw allow HTTPS'
+  community.general.ufw:
+    rule: 'allow'
+    port: 443
     proto: 'tcp'
   notify: reload_ufw
 
 - name: 'Ufw allow K8s API'
-  community.general.ufw:
-    rule: 'allow'
-    port: 6443
-    proto: 'tcp'
-  notify: reload_ufw
-
-- name: 'Ufw allow Flannel VXLAN'
-  community.general.ufw:
-    rule: 'allow'
-    port: 8472
-    proto: 'udp'
-  notify: reload_ufw
-
-- name: 'Ufw allow K8s metrics'
-  community.general.ufw:
-    rule: 'allow'
-    port: 10250
-    proto: 'tcp'
-  notify: reload_ufw
-
-- name: 'Ufw allow Flannel Wireguard (IPv4)'
-  community.general.ufw:
-    rule: 'allow'
-    port: 51820
-    proto: 'udp'
-  notify: reload_ufw
-
-- name: 'Ufw allow Flannel Wireguard (IPv6)'
-  community.general.ufw:
-    rule: 'allow'
-    port: 51821
-    proto: 'udp'
-  notify: reload_ufw
-
-- name: 'Ufw allow Spegel'
-  community.general.ufw:
-    rule: 'allow'
-    port: 5001
-    proto: 'tcp'
-  notify: reload_ufw
-
-- name: 'Ufw allow Spegel'
   community.general.ufw:
     rule: 'allow'
     port: 6443

@@ -1,0 +1,11 @@
+---
+
+- name: reload_ufw
+  community.general.ufw:
+    state: 'reloaded'
+
+- name: reload_haproxy
+  ansible.builtin.systemd_service:
+    state: reloaded
+    daemon_reload: true
+    name: 'haproxy'

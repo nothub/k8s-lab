@@ -1,1 +1,7 @@
 ---
+
+- name: 'Apt remove ufw'
+  ansible.builtin.apt:
+    state: 'absent'
+    pkg:
+      - 'ufw'
