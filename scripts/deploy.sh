@@ -52,15 +52,16 @@ print_bold 'Purging old infra leftovers...'
     cd infra
 
     print_bold 'Initializing OpenTofu workdir...'
-    tofu init -no-color
+    TF_LOG='WARN' TF_LOG_PATH='terraform.log' tofu init  -no-color
 
     print_bold 'Creating machines...'
-    tofu apply -no-color -auto-approve
+    TF_LOG='WARN' TF_LOG_PATH='terraform.log' tofu apply -no-color -auto-approve
 )
 
 # deploy cluster
 {
     gate_ip="$(yq -r '.hosts.gate.ipv4' config.yaml)"
+    domain="$(yq -r '.net.domain' config.yaml)"
     mapfile -t ctrl_ips < <(yq -r '.hosts.ctrl[].ipv4' config.yaml)
     mapfile -t work_ips < <(yq -r '.hosts.work[].ipv4' config.yaml)
 
@@ -73,18 +74,18 @@ print_bold 'Purging old infra leftovers...'
         cd playbooks
 
         print_bold "Executing gate node playbook..."
-        ansible-playbook --diff \
+        ansible-playbook \
             --inventory "${gate_ip}," \
             --extra-vars="{\"ctrl_ips\": [$(IFS=, eval 'printf "%s" "${ctrl_ips[*]}"')]}" \
             "gate.yaml"
 
         print_bold "Executing control node playbook..."
-        ansible-playbook --diff \
+        ansible-playbook \
             --inventory "$(IFS=, eval 'printf "%s" "${ctrl_ips[*]}"')" \
             "ctrl.yaml"
 
         print_bold "Executing worker node playbook..."
-        ansible-playbook --diff \
+        ansible-playbook \
             --inventory "$(IFS=, eval 'printf "%s" "${work_ips[*]}"')" \
             "work.yaml"
     )
@@ -95,7 +96,10 @@ print_bold 'Purging old infra leftovers...'
     print_bold "Initializing cluster, starting with: ${ctrl_ips[0]}"
     ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
         "janitor@${ctrl_ips[0]}" -- \
-        "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init --write-kubeconfig-mode=644"
+        "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} sh -s - server --cluster-init --write-kubeconfig-mode='644' --cluster-domain='${domain}' --tls-san='${gate_ip}'"
+
+    # TODO: instead of sleeping, do an actual health check to wait for k3s to be ready
+    sleep 60
 
     for ip in "${ctrl_ips[@]}"; do
         if test "${ip}" = "${ctrl_ips[0]}"; then
@@ -104,7 +108,7 @@ print_bold 'Purging old infra leftovers...'
             print_bold "Joining server node: ${ip}"
             ssh -o 'BatchMode=yes' -o 'VisualHostKey=no' \
                 "janitor@${ip}" -- \
-                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - server"
+                "curl -fsSL https://get.k3s.io | K3S_TOKEN=${k3s_token} K3S_URL=${k3s_url} sh -s - server --cluster-domain='${domain}' --tls-san='${gate_ip}'"
         fi
     done
 
@@ -123,7 +127,7 @@ print_bold 'Purging old infra leftovers...'
             "sudo chmod 600 /etc/rancher/k3s/k3s.yaml"
 
     # TODO: this is kinda hacky, start using dns+lb and stop doing this...
-    sed -i "s#127.0.0.1#${ctrl_ips[0]}#" 'k3s.yaml'
+    sed -i "s#127.0.0.1#${gate_ip}#" 'k3s.yaml'
 
     print_bold "Testing cluster connection..."
     kubectl --kubeconfig 'k3s.yaml' get nodes

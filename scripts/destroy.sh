@@ -9,8 +9,8 @@ cd "$(dirname "$(realpath "$0")")/.."
     cd infra
 
     printf >&2 'Destroying old machines...\n'
-    tofu init    -no-color                || true
-    tofu destroy -no-color --auto-approve || true
+    TF_LOG='WARN' TF_LOG_PATH='terraform.log' tofu init    -no-color                || true
+    TF_LOG='WARN' TF_LOG_PATH='terraform.log' tofu destroy -no-color --auto-approve || true
 
     rm -f .terraform.lock.hcl
     rm -f .terraform.tfstate.lock.info
