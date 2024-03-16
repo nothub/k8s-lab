@@ -1,5 +1,10 @@
 ---
 
+- name: 'Wait for cloud-init boot tasks'
+  ansible.builtin.wait_for:
+    path: '/var/lib/cloud/instance/boot-finished'
+    timeout: 300
+
 - name: 'Fail on unsupported host os'
   ansible.builtin.assert:
     that:
@@ -7,8 +12,3 @@
       - ansible_distribution_major_version in item.versions
     fail_msg: "Host os {{ ansible_distribution }} {{ ansible_distribution_major_version }} is not supported!"
   with_items: "{{ supported }}"
-
-- name: 'Wait for cloud-init boot tasks'
-  ansible.builtin.wait_for:
-    path: '/var/lib/cloud/instance/boot-finished'
-    timeout: 300
