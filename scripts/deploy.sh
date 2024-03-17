@@ -132,6 +132,14 @@ print_bold 'Purging old infra leftovers...'
     print_bold "Testing cluster connection..."
     kubectl --kubeconfig 'k3s.yaml' get nodes
     kubectl --kubeconfig 'k3s.yaml' get pods --all-namespaces
+
+    print_bold "Deploying nginx example..."
+    #kubectl --kubeconfig 'k3s.yaml' apply -f https://k8s.io/examples/controllers/nginx-deployment.yaml
+    kubectl --kubeconfig 'k3s.yaml' create deployment nginx --image=nginx --port=80 --replicas=3
+    kubectl --kubeconfig 'k3s.yaml' create service clusterip nginx --tcp=80:80
+    kubectl --kubeconfig 'k3s.yaml' describe service nginx
+    #sleep 10
+    #kubectl --kubeconfig 'k3s.yaml' get deployments --all-namespaces
 }
 
 print_bold '🏁 Done!'
