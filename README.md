@@ -18,3 +18,7 @@ My IaC laboratory
 sudo ./scripts/install-deps.sh
 ./scripts/deploy.sh
 ```
+
+#### 🛣️ Roadmap
+
+- [ ] Deploy [Cloudogus gitops-playground](https://github.com/cloudogu/gitops-playground)
