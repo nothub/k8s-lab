@@ -38,7 +38,10 @@ apt-get install -y \
 # misc tools
 apt-get install -y \
     jq \
-    yq
+    yq \
+    mkcert \
+    git-crypt \
+    openssh-client
 
 # opentofu
 if test ! -f /usr/share/keyrings/opentofu.gpg; then
